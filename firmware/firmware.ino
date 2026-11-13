@@ -39,26 +39,29 @@ const uint8_t PIN_MOTOR_IN1   = 4;    // Left Motors Forward
 const uint8_t PIN_MOTOR_IN2   = 5;    // Left Motors Reverse
 const uint8_t PIN_MOTOR_IN3   = 6;    // Right Motors Forward
 const uint8_t PIN_MOTOR_IN4   = 7;    // Right Motors Reverse
-const uint8_t PIN_RELAY_PUMP  = 8;    // Water / Pesticide Pump Relay (Active-LOW)
+const uint8_t PIN_RELAY_PUMP  = 12;   // Water / Pesticide Pump Relay on Pin D12 (Pure Digital Pin)
 const uint8_t PIN_SERVO_SEED  = 9;    // Seed Dispenser MG90S Servo
 const uint8_t PIN_SERVO_PLOUGH= 10;   // Plough Lifter MG996R Servo
 const uint8_t PIN_STATUS_LED  = 13;   // Onboard Status LED
 
+// Relay Logic Configuration: Active-LOW (LOW=ON, HIGH=OFF)
+const bool RELAY_ACTIVE_HIGH  = false;
+
 // Timing Parameters (Milliseconds)
 const unsigned long WATCHDOG_TIMEOUT_MS    = 2000; // Stop locomotion if no signal within 2s
 const unsigned long LED_FLASH_DURATION_MS  = 70;   // Status LED flash length
-const unsigned long PLOUGH_TRAVEL_TIME_MS  = 650;  // Time needed for plough to reach position before detaching
-const unsigned long SEED_INTERVAL_MS       = 350;  // Agitation period (switching interval between angles)
-const unsigned long SEED_CLOSE_TRAVEL_MS   = 300;  // Time allowed to close gate before detaching
+const unsigned long PLOUGH_TRAVEL_TIME_MS  = 800;  // Time needed for plough to reach position before detaching
+const unsigned long SEED_STEP_DELAY_MS     = 20;   // Smooth step speed: 20 ms per degree (calibrated from test code)
+const unsigned long SEED_CLOSE_TRAVEL_MS   = 400;  // Time allowed to close gate before detaching
 
-// Plough Angle Calibration (Easily adjustable)
-const int PLOUGH_RETRACT_ANGLE = 20;   // Transit / Lifted position (degrees)
+// Plough Angle Calibration (Calibrated from physical chassis test)
+const int PLOUGH_RETRACT_ANGLE = 72;   // Transit / Lifted position (degrees)
 const int PLOUGH_DEPLOY_ANGLE  = 120;  // Deployed / Ground-engagement position (degrees)
 
-// Seed Dispenser Agitation Angles
-const int SEED_CLOSED_ANGLE   = 0;     // Fully shut (prevents seed leakage)
-const int SEED_AGITATE_MIN    = 15;    // Agitation stroke lower bound
-const int SEED_AGITATE_MAX    = 65;    // Agitation stroke upper bound
+// Seed Dispenser Agitation Angles (Calibrated from physical chassis test)
+const int SEED_CLOSED_ANGLE   = 73;    // Fully shut / Neutral position (degrees)
+const int SEED_AGITATE_MIN    = 73;    // Agitation stroke lower bound (degrees)
+const int SEED_AGITATE_MAX    = 123;   // Agitation stroke upper bound (degrees)
 
 // ============================================================================
 // SYSTEM OBJECTS & GLOBAL STATE VARIABLES
@@ -83,8 +86,10 @@ unsigned long ploughDetachTimestamp = 0;
 // Seed Dispenser Agitation State Machine
 bool isSeedingActive = false;
 bool isSeedStopping = false;
-bool seedToggleState = false;
-unsigned long lastSeedAgitateTimestamp = 0;
+int currentSeedPos = SEED_CLOSED_ANGLE;
+int seedSweepDirection = 1; // +1 = moving towards MAX, -1 = moving towards MIN
+unsigned long lastSeedStepTimestamp = 0;
+unsigned long seedPauseUntilTimestamp = 0;
 unsigned long seedDetachTimestamp = 0;
 
 // Pump State (Active-LOW relay)
@@ -120,8 +125,8 @@ void setup() {
   pinMode(PIN_MOTOR_IN4, OUTPUT);
   stopMotors();
 
-  // 3. Configure Relay Pin (Write HIGH first to prevent active-LOW click at boot)
-  digitalWrite(PIN_RELAY_PUMP, HIGH); // Relay OFF (HIGH for active-LOW)
+  // 3. Configure Relay Pin (Default to safe OFF state)
+  digitalWrite(PIN_RELAY_PUMP, RELAY_ACTIVE_HIGH ? LOW : HIGH); // Preset pin HIGH (Relay OFF)
   pinMode(PIN_RELAY_PUMP, OUTPUT);
 
   // 4. Configure Status LED
@@ -189,21 +194,21 @@ void processCommand(char cmd) {
   Serial.println(cmd);
 
   switch (cmd) {
-    // --- Locomotion Commands ---
+    // --- Locomotion Commands (Calibrated for physical chassis motor polarity) ---
     case 'F': // Drive All Wheels Forward
-      setLocomotion(HIGH, LOW, HIGH, LOW, true);
+      setLocomotion(HIGH, LOW, LOW, HIGH, true);
       break;
 
     case 'B': // Drive All Wheels Reverse
-      setLocomotion(LOW, HIGH, LOW, HIGH, true);
-      break;
-
-    case 'L': // Skid-Steer Left (Left reverse, Right forward)
       setLocomotion(LOW, HIGH, HIGH, LOW, true);
       break;
 
-    case 'R': // Skid-Steer Right (Left forward, Right reverse)
-      setLocomotion(HIGH, LOW, LOW, HIGH, true);
+    case 'L': // Skid-Steer Left
+      setLocomotion(LOW, HIGH, LOW, HIGH, true);
+      break;
+
+    case 'R': // Skid-Steer Right
+      setLocomotion(HIGH, LOW, HIGH, LOW, true);
       break;
 
     case 'S': // Emergency / Released Stop
@@ -286,10 +291,12 @@ void startSeeding() {
     if (!seedServo.attached()) {
       seedServo.attach(PIN_SERVO_SEED);
     }
-    // Start initial agitation stroke immediately
-    seedToggleState = true;
-    seedServo.write(SEED_AGITATE_MAX);
-    lastSeedAgitateTimestamp = millis();
+    // Start initial agitation stroke
+    currentSeedPos = SEED_AGITATE_MIN;
+    seedSweepDirection = 1;
+    seedServo.write(currentSeedPos);
+    lastSeedStepTimestamp = millis();
+    seedPauseUntilTimestamp = 0;
   }
 }
 
@@ -302,21 +309,21 @@ void stopSeeding() {
     if (!seedServo.attached()) {
       seedServo.attach(PIN_SERVO_SEED);
     }
+    currentSeedPos = SEED_CLOSED_ANGLE;
     seedServo.write(SEED_CLOSED_ANGLE);
     seedDetachTimestamp = millis() + SEED_CLOSE_TRAVEL_MS;
   }
 }
 
 // ============================================================================
-// IRRIGATION SUBSYSTEM (Active-LOW Relay Control)
+// IRRIGATION SUBSYSTEM (Relay Pump Control)
 // ============================================================================
 void setPump(bool state) {
   isPumpOn = state;
-  // Active-LOW relay logic: LOW energizes relay coil, HIGH de-energizes
   if (isPumpOn) {
-    digitalWrite(PIN_RELAY_PUMP, LOW);  // PUMP ON
+    digitalWrite(PIN_RELAY_PUMP, RELAY_ACTIVE_HIGH ? HIGH : LOW); // PUMP ON
   } else {
-    digitalWrite(PIN_RELAY_PUMP, HIGH); // PUMP OFF
+    digitalWrite(PIN_RELAY_PUMP, RELAY_ACTIVE_HIGH ? LOW : HIGH); // PUMP OFF
   }
 }
 
@@ -346,12 +353,22 @@ void updateServos() {
     }
   }
 
-  // Handle Seed Agitation Oscillation
+  // Handle Seed Agitation Oscillation (Smooth Non-Blocking Sweeping)
   if (isSeedingActive) {
-    if (currentMillis - lastSeedAgitateTimestamp >= SEED_INTERVAL_MS) {
-      lastSeedAgitateTimestamp = currentMillis;
-      seedToggleState = !seedToggleState;
-      seedServo.write(seedToggleState ? SEED_AGITATE_MAX : SEED_AGITATE_MIN);
+    if (currentMillis >= seedPauseUntilTimestamp) {
+      if (currentMillis - lastSeedStepTimestamp >= SEED_STEP_DELAY_MS) {
+        lastSeedStepTimestamp = currentMillis;
+        currentSeedPos += seedSweepDirection;
+        seedServo.write(currentSeedPos);
+
+        if (currentSeedPos >= SEED_AGITATE_MAX) {
+          seedSweepDirection = -1;
+          seedPauseUntilTimestamp = currentMillis + 500; // 500ms pause at peak
+        } else if (currentSeedPos <= SEED_AGITATE_MIN) {
+          seedSweepDirection = 1;
+          seedPauseUntilTimestamp = currentMillis + 500; // 500ms pause at base
+        }
+      }
     }
   } 
   else if (isSeedStopping) {

@@ -1,28 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg_dark">#0D131A</color>
-    <color name="card_dark">#18222D</color>
-    <color name="card_dark_stroke">#283849</color>
-    <color name="card_dark_elevated">#1F2C3A</color>
+    <!-- Dark Surface & Backgrounds -->
+    <color name="bg_dark">#0A0E14</color>
+    <color name="card_dark">#121820</color>
+    <color name="card_dark_stroke">#1E293B</color>
+    <color name="card_dark_elevated">#17202B</color>
+    <color name="badge_bg">#182230</color>
+    <color name="badge_stroke">#243347</color>
     
-    <color name="primary_green">#00E676</color>
-    <color name="primary_green_dark">#00B248</color>
-    <color name="primary_green_light">#69F0AE</color>
+    <!-- Primary Emerald Theme -->
+    <color name="primary_green">#10B981</color>
+    <color name="primary_green_dark">#059669</color>
+    <color name="primary_green_light">#34D399</color>
     
-    <color name="water_blue">#2979FF</color>
-    <color name="seed_amber">#FFAB00</color>
-    <color name="plough_brown">#8D6E63</color>
-    <color name="stop_red">#FF1744</color>
-    <color name="stop_red_dark">#D50000</color>
+    <!-- Tool Highlights -->
+    <color name="water_blue">#38BDF8</color>
+    <color name="water_blue_dark">#0284C7</color>
+    <color name="seed_amber">#F59E0B</color>
+    <color name="seed_amber_dark">#D97706</color>
+    <color name="plough_emerald">#10B981</color>
     
-    <color name="status_connected">#00E676</color>
-    <color name="status_disconnected">#FF5252</color>
-    <color name="status_connecting">#FFD600</color>
+    <!-- Emergency Stop Red -->
+    <color name="stop_red">#EF4444</color>
+    <color name="stop_red_dark">#DC2626</color>
+    <color name="stop_red_glow">#451A1A</color>
     
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#90A4AE</color>
-    <color name="text_muted">#607D8B</color>
-    <color name="btn_pressed">#37474F</color>
-    <color name="btn_normal">#263238</color>
+    <!-- Connection Status Dots -->
+    <color name="status_connected">#10B981</color>
+    <color name="status_disconnected">#EF4444</color>
+    <color name="status_connecting">#F59E0B</color>
+    
+    <!-- Modern Typography -->
+    <color name="text_primary">#F8FAFC</color>
+    <color name="text_secondary">#94A3B8</color>
+    <color name="text_muted">#64748B</color>
+    
+    <!-- D-Pad Button States -->
+    <color name="dpad_normal">#151C26</color>
+    <color name="dpad_pressed">#1C2E2A</color>
+    <color name="dpad_stroke">#223042</color>
+    <color name="dpad_stroke_pressed">#10B981</color>
 </resources>
-

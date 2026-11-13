@@ -37,3 +37,6 @@ captures/
 *.bin
 *.o
 *.d
+
+**/local.properties
+local.properties

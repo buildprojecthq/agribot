@@ -97,38 +97,41 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
     @SuppressLint("ClickableViewAccessibility")
     private fun setupLocomotionTouchListeners() {
         // Touch-and-Hold for Forward
-        btnForward.setOnTouchListener { _, event ->
-            handleDirectionalTouch(event, 'F')
+        btnForward.setOnTouchListener { v, event ->
+            handleDirectionalTouch(v, event, 'F')
         }
 
         // Touch-and-Hold for Backward
-        btnBackward.setOnTouchListener { _, event ->
-            handleDirectionalTouch(event, 'B')
+        btnBackward.setOnTouchListener { v, event ->
+            handleDirectionalTouch(v, event, 'B')
         }
 
         // Touch-and-Hold for Skid Left
-        btnLeft.setOnTouchListener { _, event ->
-            handleDirectionalTouch(event, 'L')
+        btnLeft.setOnTouchListener { v, event ->
+            handleDirectionalTouch(v, event, 'L')
         }
 
         // Touch-and-Hold for Skid Right
-        btnRight.setOnTouchListener { _, event ->
-            handleDirectionalTouch(event, 'R')
+        btnRight.setOnTouchListener { v, event ->
+            handleDirectionalTouch(v, event, 'R')
         }
 
         // Central Emergency STOP button
-        btnEmergencyStop.setOnClickListener {
+        btnEmergencyStop.setOnClickListener { v ->
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
             transmitCommand('S')
         }
     }
 
-    private fun handleDirectionalTouch(event: MotionEvent, commandByte: Char): Boolean {
+    private fun handleDirectionalTouch(v: View, event: MotionEvent, commandByte: Char): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
                 transmitCommand(commandByte)
                 return true
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
                 transmitCommand('S')
                 return true
             }
@@ -138,40 +141,43 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
 
     private fun setupToolSwitchListeners() {
         // Plough Control: 'P' = Deploy, 'p' = Retract
-        switchPlough.setOnCheckedChangeListener { _, isChecked ->
+        switchPlough.setOnCheckedChangeListener { v, isChecked ->
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
             if (isChecked) {
                 transmitCommand('P')
-                tvPloughState.text = "State: DEPLOYED ('P')"
+                tvPloughState.text = "DEPLOYED • IN-SOIL (120°)"
                 tvPloughState.setTextColor(getColor(R.color.primary_green))
             } else {
                 transmitCommand('p')
-                tvPloughState.text = "State: RETRACTED ('p')"
+                tvPloughState.text = "TRANSIT • LIFTED (72°)"
                 tvPloughState.setTextColor(getColor(R.color.text_secondary))
             }
         }
 
         // Seed Dispenser: 'D' = Agitate/Dispense, 'd' = Stop/Close
-        switchSeed.setOnCheckedChangeListener { _, isChecked ->
+        switchSeed.setOnCheckedChangeListener { v, isChecked ->
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
             if (isChecked) {
                 transmitCommand('D')
-                tvSeedState.text = "State: AGITATING / SOWING ('D')"
+                tvSeedState.text = "AGITATING • SOWING (73°-123°)"
                 tvSeedState.setTextColor(getColor(R.color.seed_amber))
             } else {
                 transmitCommand('d')
-                tvSeedState.text = "State: IDLE / CLOSED ('d')"
+                tvSeedState.text = "GATE CLOSED (73°)"
                 tvSeedState.setTextColor(getColor(R.color.text_secondary))
             }
         }
 
         // Water Pump: 'W' = Pump ON, 'w' = Pump OFF
-        switchWater.setOnCheckedChangeListener { _, isChecked ->
+        switchWater.setOnCheckedChangeListener { v, isChecked ->
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
             if (isChecked) {
                 transmitCommand('W')
-                tvWaterState.text = "State: PUMP ACTIVE ('W')"
+                tvWaterState.text = "PUMP ACTIVE • SPRAYING"
                 tvWaterState.setTextColor(getColor(R.color.water_blue))
             } else {
                 transmitCommand('w')
-                tvWaterState.text = "State: PUMP OFF ('w')"
+                tvWaterState.text = "PUMP DE-ENERGIZED"
                 tvWaterState.setTextColor(getColor(R.color.text_secondary))
             }
         }
@@ -246,7 +252,7 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
         viewStatusDot.setBackgroundResource(R.drawable.bg_dot_connected)
         tvConnectionStatus.text = getString(R.string.status_connected, deviceName)
         btnConnectToggle.text = getString(R.string.btn_disconnect)
-        btnConnectToggle.setBackgroundColor(getColor(R.color.stop_red_dark))
+        btnConnectToggle.setBackgroundResource(R.drawable.bg_pill_btn_danger)
         btnConnectToggle.isEnabled = true
         Toast.makeText(this, "Connected to $deviceName", Toast.LENGTH_SHORT).show()
     }
@@ -255,7 +261,7 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
         viewStatusDot.setBackgroundResource(R.drawable.bg_dot_disconnected)
         tvConnectionStatus.text = getString(R.string.status_disconnected)
         btnConnectToggle.text = getString(R.string.btn_connect)
-        btnConnectToggle.setBackgroundColor(getColor(R.color.primary_green_dark))
+        btnConnectToggle.setBackgroundResource(R.drawable.bg_pill_btn)
         btnConnectToggle.isEnabled = true
         Toast.makeText(this, error, Toast.LENGTH_LONG).show()
     }
@@ -264,7 +270,7 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
         viewStatusDot.setBackgroundResource(R.drawable.bg_dot_disconnected)
         tvConnectionStatus.text = getString(R.string.status_disconnected)
         btnConnectToggle.text = getString(R.string.btn_connect)
-        btnConnectToggle.setBackgroundColor(getColor(R.color.primary_green_dark))
+        btnConnectToggle.setBackgroundResource(R.drawable.bg_pill_btn)
         btnConnectToggle.isEnabled = true
         Toast.makeText(this, "Bluetooth link disconnected.", Toast.LENGTH_SHORT).show()
     }

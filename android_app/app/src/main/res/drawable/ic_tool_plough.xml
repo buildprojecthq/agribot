@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Spade / Plough Blade Icon -->
+    <path
+        android:strokeColor="#10B981"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M12,2 L12,11 M12,11 L6,15 C6,19 12,22 12,22 C12,22 18,19 18,15 L12,11 Z" />
+</vector>
+
