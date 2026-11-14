@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.MotionEvent
@@ -40,6 +41,9 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
     private lateinit var switchPlough: SwitchCompat
     private lateinit var switchSeed: SwitchCompat
     private lateinit var switchWater: SwitchCompat
+
+    private lateinit var layoutFooter: View
+    private lateinit var tvFooterLink: TextView
 
     private val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
@@ -77,6 +81,7 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
         setupLocomotionTouchListeners()
         setupToolSwitchListeners()
         setupConnectionControls()
+        setupFooterLink()
 
         // Auto-check permissions and auto-connect to HC-05 on app start
         checkPermissionsAndAutoConnect()
@@ -97,6 +102,23 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
         switchPlough = findViewById(R.id.switchPlough)
         switchSeed = findViewById(R.id.switchSeed)
         switchWater = findViewById(R.id.switchWater)
+
+        layoutFooter = findViewById(R.id.layoutFooter)
+        tvFooterLink = findViewById(R.id.tvFooterLink)
+    }
+
+    private fun setupFooterLink() {
+        val openUrlListener = View.OnClickListener { v ->
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://buildproject.in/"))
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(this, "Could not open browser: https://buildproject.in/", Toast.LENGTH_SHORT).show()
+            }
+        }
+        layoutFooter.setOnClickListener(openUrlListener)
+        tvFooterLink.setOnClickListener(openUrlListener)
     }
 
     @SuppressLint("ClickableViewAccessibility")
