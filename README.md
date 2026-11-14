@@ -1,6 +1,11 @@
 # Smart Ploughing and Cultivation Agriculture Robot
 
-A multi-functional, Bluetooth-controlled agricultural mobile robot designed for precision farming. The system coordinates 4-wheel differential locomotion, mechanical soil ploughing, metered seed dispensing, and pressurized liquid spraying through an Arduino Uno microcontroller and a companion Native Android application.
+[![GitHub Release](https://img.shields.io/github/v/release/buildprojecthq/agribot?color=059669&label=Release&logo=github)](https://github.com/buildprojecthq/agribot/releases/tag/v1.0.0)
+[![Target Platform](https://img.shields.io/badge/Platform-Arduino%20Nano%20%28ATmega328P%29-00979D?logo=arduino)](https://www.arduino.cc/)
+[![Companion App](https://img.shields.io/badge/Android%20App-Kotlin%20%7C%20Jetpack-3DDC84?logo=android)](https://github.com/buildprojecthq/agribot/releases/tag/v1.0.0)
+[![Website](https://img.shields.io/badge/Built%20by-buildproject.in-2563EB)](https://buildproject.in/)
+
+A multi-functional, Bluetooth-controlled agricultural mobile robot engineered for precision farming. The system coordinates **4-wheel differential drive locomotion**, **mechanical soil tillage / furrowing**, **metered seed dispensing**, and **pressurized liquid pesticide spraying** through an Arduino Nano microcontroller and a companion Native Android application.
 
 ---
 
@@ -8,8 +13,9 @@ A multi-functional, Bluetooth-controlled agricultural mobile robot designed for 
 
 ```
 +----------------------------------------------------------------------------------+
-|                              COMPANION ANDROID APP                                |
-|   [ Connect / Disconnect ]   [ D-Pad Locomotion Pad ]   [ 3-Tool Actuator Toggles]|
+|                           NATIVE ANDROID COMPANION APP                            |
+|   [ Auto-Connect HC-05 ]    [ Centered D-Pad Steering ]    [ Tool Actuation Toggles]
+|                       [ Built by buildproject.in ]                               |
 +----------------------------------------------------------------------------------+
                                          |
                                 (Bluetooth SPP / UART 9600)
@@ -21,103 +27,109 @@ A multi-functional, Bluetooth-controlled agricultural mobile robot designed for 
                                          |
                                          v
 +----------------------------------------------------------------------------------+
-|                             ARDUINO UNO R3 (ATmega328P)                          |
-|             (Non-blocking millis() state machine + 2000ms Watchdog)              |
+|                            ARDUINO NANO R3 (ATmega328P)                          |
+|             (Non-blocking millis() state machine + 50Hz Software PWM + Watchdog) |
 +----------------------------------------------------------------------------------+
         |                     |                       |                     |
         v                     v                       v                     v
-  [ Pins D4-D7 ]          [ Pin D10 ]             [ Pin D9 ]            [ Pin D8 ]
+  [ Pins D4-D7 ]          [ Pin D10 ]             [ Pin D9 ]            [ Pin D12 ]
         |                     |                       |                     |
-  L298N Motor Driver    MG996R Servo            MG90S Servo         1-Ch Relay (Active-LOW)
+  L298N Motor Driver      Tool Servo              Tool Servo        1-Ch Relay (Active-LOW)
+  (50Hz Speed Modulated)  (Plough Lifter)         (Seed Agitator)   (Water / Pesticide)
         |                     |                       |                     |
- 4x Geared DC Motors    Plough Lifter Blade    Seed Dispenser Gate     12V DC Water Pump
- (Differential Drive)   (Deploy / Retract)     (Oscillating Agitator)  (Pesticide / Mist)
+  4x Geared DC Motors     Tillage Blade           Seed Hopper Gate      12V DC Water Pump
+  (Skid-Steer 4WD)        (Deploy 120° / Ret 72°) (Agitate 73° - 123°)  (Pressurized Spray)
 ```
 
 ---
 
-## 2. Directory Structure
+## 2. Dual-Isolated Power Architecture (Method 2)
 
-```
-miniproject_agriculture_bot/
-├── firmware/
-│   └── firmware.ino                    # Production Arduino Uno C++ firmware
-├── android_app/                        # Complete Native Android Studio project
-│   ├── app/
-│   │   ├── src/main/
-│   │   │   ├── AndroidManifest.xml     # SPP & Bluetooth permissions (Android 6 to 14)
-│   │   │   ├── java/com/agrirobot/smartplough/
-│   │   │   │   ├── MainActivity.kt     # Locomotion & Tool UI controller
-│   │   │   │   ├── BluetoothManager.kt # Multi-threaded RFCOMM SPP socket manager
-│   │   │   │   └── DeviceListDialog.kt # Bonded device selection modal
-│   │   │   └── res/
-│   │   │       ├── layout/activity_main.xml
-│   │   │       ├── values/{colors,strings,themes}.xml
-│   │   │       └── drawable/*.xml
-│   │   └── build.gradle.kts
-│   ├── build.gradle.kts
-│   └── settings.gradle.kts
-└── docs/
-    └── WIRING_AND_SCHEMATICS.md        # Pinout table, voltage divider, and power rails
-```
+To completely eliminate motor back-EMF, ground bounce, and brownout microcontroller resets, the robot separates high-power motor loads from sensitive digital logic:
+
+| Power Bus | Voltage | Source | Components Powered |
+| :--- | :--- | :--- | :--- |
+| **High-Current Drive Bus** | **11.1V – 12.6V** | 3S 18650 Li-ion Battery Pack | L298N `+12V` terminal (4x wheel motors) & Water Pump via Relay |
+| **Clean Logic Bus** | **5.0V Regulated** | Single 18650 Cell + SM5401 Boost | Arduino Nano `5V` pin, HC-05 `VCC`, SG90 Servos `VCC`, L298N `+5V` logic |
+| **Common Ground** | **0V Reference** | Unified Ground Bus | Unites Battery (-), SM5401 (-), Nano GND, and L298N GND |
+
+> [!IMPORTANT]
+> The L298N onboard **5V-EN jumper cap is REMOVED**, keeping the 12V motor supply isolated from the 5V logic supply while sharing a common ground.
 
 ---
 
-## 3. Communication Protocol (Single-Byte ASCII)
+## 3. Hardware Pin Mapping
+
+| Arduino Nano Pin | Connected Component | Functionality / Calibration |
+| :---: | :--- | :--- |
+| **`D2`** | HC-05 Bluetooth `TXD` | SoftwareSerial RX (Receives telemetry packets) |
+| **`D3`** | HC-05 Bluetooth `RXD` | SoftwareSerial TX (via 1kΩ / 2kΩ level shifter divider) |
+| **`D4`** | L298N `IN1` | Left Motors Forward control |
+| **`D5`** | L298N `IN2` | Left Motors Reverse control |
+| **`D6`** | L298N `IN3` | Right Motors Forward control |
+| **`D7`** | L298N `IN4` | Right Motors Reverse control |
+| **`D9`** | Seed Dispenser Servo (SG90) | Metered oscillating agitation gate ($73^\circ \leftrightarrow 123^\circ$) |
+| **`D10`** | Plough Lifter Servo (MG996R/SG90) | Mechanical tillage blade lifter ($72^\circ \leftrightarrow 120^\circ$) |
+| **`D12`** | 1-Channel Relay Module | Optocoupled Active-LOW switch for 12V Water Pump |
+| **`D13`** | Onboard Status LED | Command acknowledgment blinker & watchdog indicator |
+| **`5V`** | Breadboard 5V Rail | Regulated power input from SM5401 boost module |
+| **`GND`** | Breadboard Blue Rail | System common ground |
+
+---
+
+## 4. Communication Protocol (Single-Byte ASCII)
+
+Commands are transmitted over Bluetooth SPP at **9600 baud, 8-N-1**:
 
 | Byte | Subsystem | Action Performed | Hardware State |
 | :---: | :--- | :--- | :--- |
-| `'F'` | Locomotion | Forward Drive | Left FWD, Right FWD |
-| `'B'` | Locomotion | Reverse Drive | Left REV, Right REV |
-| `'L'` | Locomotion | Skid-steer Turn Left | Left REV, Right FWD |
-| `'R'` | Locomotion | Skid-steer Turn Right | Left FWD, Right REV |
-| `'S'` | Locomotion | Emergency / Neutral Stop | All motor inputs LOW |
-| `'P'` | Tillage | Deploy Plough into Soil | Servo D10 rotates to $120^\circ$ and detaches |
-| `'p'` | Tillage | Retract Plough for Transit | Servo D10 rotates to $20^\circ$ and detaches |
-| `'D'` | Seeding | Start Seed Metering | Servo D9 oscillates $15^\circ \leftrightarrow 65^\circ$ every 350 ms |
-| `'d'` | Seeding | Stop Seed Metering | Servo D9 moves to $0^\circ$ (closed) and detaches |
-| `'W'` | Irrigation | Spray Pump ON | Pin D8 driven LOW (Relay coil energized) |
-| `'w'` | Irrigation | Spray Pump OFF | Pin D8 driven HIGH (Relay de-energized) |
+| **`'F'`** | Locomotion | Forward Drive | Left FWD, Right FWD (Modulated at 75% duty cycle) |
+| **`'B'`** | Locomotion | Backward Drive | Left REV, Right REV (Modulated at 75% duty cycle) |
+| **`'L'`** | Locomotion | Skid-steer Left Turn | Left REV, Right FWD (Modulated at 75% duty cycle) |
+| **`'R'`** | Locomotion | Skid-steer Right Turn | Left FWD, Right REV (Modulated at 75% duty cycle) |
+| **`'S'`** | Locomotion | Emergency / Released Stop | All motor driver pins driven LOW |
+| **`'P'`** | Tillage | Deploy Plough into Soil | Servo D10 rotates to $120^\circ$ and auto-detaches |
+| **`'p'`** | Tillage | Retract Plough for Transit | Servo D10 rotates to $72^\circ$ and auto-detaches |
+| **`'D'`** | Seeding | Start Seed Sowing | Servo D9 agitates $73^\circ \leftrightarrow 123^\circ$ every 20ms |
+| **`'d'`** | Seeding | Stop Seed Sowing | Servo D9 moves to $73^\circ$ (closed) and auto-detaches |
+| **`'W'`** | Irrigation | Water Pump ON | Pin D12 driven LOW (Active-LOW relay closed) |
+| **`'w'`** | Irrigation | Water Pump OFF | Pin D12 driven HIGH (Relay opened) |
 
 ---
 
-## 4. Key Firmware Highlights
+## 5. Firmware Technical Highlights
 
-1. **Zero Blocking Delays:**
-   * Uses non-blocking `millis()` timing exclusively inside `loop()`. The processor continuously checks incoming serial packets while simultaneously oscillating the seed gate and running timeouts.
-2. **2000 ms Failsafe Watchdog:**
-   * If the mobile device goes out of range or disconnects while the robot is driving, the watchdog timer halts the motors after 2 seconds to prevent runaway hazards.
+1. **Software Duty-Cycle Speed Control (~25% Slower):**
+   * Implements a non-blocking $50\text{ Hz}$ ($20\text{ ms}$) software PWM loop in `firmware.ino` (`MOTOR_DUTY_PERCENT = 75`).
+   * Delivers smooth, controlled field navigation without needing extra hardware wiring to ENA/ENB pins.
+2. **2000 ms Fail-Safe Watchdog:**
+   * If the mobile device loses connection or leaves Bluetooth range during driving, the watchdog timer halts all locomotion after 2 seconds.
 3. **Brownout & Servo Protection:**
-   * High-torque servos detach PWM signals (`servo.detach()`) once the target angle is reached, eliminating continuous stall current draw and preventing brownout resets on the ATmega328P.
-4. **Benchtop Serial Mirroring:**
-   * Accepts commands from both the HC-05 Bluetooth module and the USB Arduino Serial Monitor (`9600 bps`) for testing without a phone.
+   * High-torque servos automatically detach their PWM signals (`servo.detach()`) after reaching the target position, eliminating continuous stall current and saving battery.
+4. **Boot Glitch Prevention:**
+   * Relay pin D12 is preset to `HIGH` before `pinMode(OUTPUT)` is declared, ensuring zero relay chatter or false pump activations during boot.
 
 ---
 
-## 5. Deployment Guide
+## 6. Native Android Companion App
 
-### Flashing the Arduino Uno:
-1. Open [firmware.ino](file:///home/yashas/Projects/miniproject_agriculture_bot/firmware/firmware.ino) in the Arduino IDE.
-2. Select Board: **Arduino Uno** and your USB Port.
-3. Click **Upload**.
-4. Open the Serial Monitor at **9600 baud**. You can send `'F'`, `'S'`, `'P'`, `'p'`, `'D'`, `'d'`, `'W'`, `'w'` directly from your keyboard to test the hardware immediately!
-
-### Building the Android App:
-1. Open **Android Studio**.
-2. Select **Open an Existing Project** and browse to `/home/yashas/Projects/miniproject_agriculture_bot/android_app`.
-3. Connect your Android smartphone via USB (with Developer Mode & USB Debugging enabled).
-4. Click **Run 'app'** (Green play icon) or select **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
-5. In your phone's Android Bluetooth Settings, pair with your `HC-05` module (default PIN is `1234` or `0000`).
-6. Launch **Smart Agri Robot**, tap **Connect BT**, select `HC-05`, and start driving!
+* **Auto Bluetooth Management:** Automatically checks permissions, turns on Bluetooth, discovers the paired **`HC-05`** module, and connects instantly on launch.
+* **Touch-and-Hold Steering:** Intuitive D-Pad controls where holding down an arrow drives the robot and releasing instantly stops.
+* **Pixel-Perfect Obsidian UI:** Modern high-contrast dark theme with centered button geometry and haptic feedback.
+* **Direct Web Integration:** Footer includes an interactive link to [`https://buildproject.in/`](https://buildproject.in/).
 
 ---
 
-## 6. Viva & Presentation Questions Reference
+## 7. Project Resources & Downloads
 
-* **Q: Why is an LM2596 buck converter chosen over a 7805 regulator?**
-  * *A:* The MG996R servo draws up to $2.5\text{ A}$ stall current. A 7805 linear regulator is rated for only $1.0\text{ A}$ and converts excess voltage into severe heat $(12\text{V} - 5\text{V}) \times 1\text{A} = 7\text{W}$, leading to thermal throttling and Arduino brownout. The LM2596 switching regulator provides up to $3.0\text{ A}$ continuous with $>90\%$ efficiency.
-* **Q: Why is a voltage divider required between Arduino TX and HC-05 RX?**
-  * *A:* The HC-05 core operates at $3.3\text{V}$ logic. Arduino Uno digital outputs operate at $5.0\text{V}$. A $1\text{ k}\Omega$ and $2\text{ k}\Omega$ divider steps $5.0\text{V}$ down to $3.33\text{V}$, preventing damage to the HC-05 receiver.
-* **Q: Why does the seed dispenser servo oscillate instead of holding open?**
-  * *A:* Seeds in a funnel hopper clump due to friction and moisture. Static opening causes either complete blockage or an uncontrollable spill. Periodic agitation ($15^\circ \leftrightarrow 65^\circ$) meters the flow uniformly.
+* **Production Release APK:** [SmartAgriRobot-release.apk (GitHub Release v1.0.0)](https://github.com/buildprojecthq/agribot/releases/tag/v1.0.0)
+* **Viva & Components PDF Guide:** [Smart_Agri_Robot_Viva_and_Components_Guide.pdf](file:///home/yashas/Projects/miniproject_agriculture_bot/Smart_Agri_Robot_Viva_and_Components_Guide.pdf)
+* **Relay Benchtop Test Utility:** [`test_relay/test_relay.ino`](file:///home/yashas/Projects/miniproject_agriculture_bot/test_relay/test_relay.ino)
 
+---
+
+## 8. Authors & Credits
+
+* **Developer:** Yashas R
+* **Project Platform:** [buildproject.in](https://buildproject.in/)
+* **Repository:** [buildprojecthq/agribot](https://github.com/buildprojecthq/agribot)
