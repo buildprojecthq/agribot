@@ -54,6 +54,11 @@ const unsigned long PLOUGH_TRAVEL_TIME_MS  = 800;  // Time needed for plough to 
 const unsigned long SEED_STEP_DELAY_MS     = 20;   // Smooth step speed: 20 ms per degree (calibrated from test code)
 const unsigned long SEED_CLOSE_TRAVEL_MS   = 400;  // Time allowed to close gate before detaching
 
+// Wheel Speed Control Parameters (Software Duty-Cycle PWM)
+const uint8_t MOTOR_DUTY_PERCENT            = 75;   // 75% power (~25% speed reduction for slower, controlled motion)
+const unsigned long MOTOR_PWM_CYCLE_MS      = 20;   // 50 Hz cycle period
+const unsigned long MOTOR_PWM_ACTIVE_MS     = (MOTOR_PWM_CYCLE_MS * MOTOR_DUTY_PERCENT) / 100; // 15 ms active
+
 // Plough Angle Calibration (Calibrated from physical chassis test)
 const int PLOUGH_RETRACT_ANGLE = 72;   // Transit / Lifted position (degrees)
 const int PLOUGH_DEPLOY_ANGLE  = 120;  // Deployed / Ground-engagement position (degrees)
@@ -74,6 +79,10 @@ Servo seedServo;
 // Locomotion & Safety Watchdog
 bool isMoving = false;
 unsigned long lastCommandTimestamp = 0;
+uint8_t targetMotorIn1 = LOW;
+uint8_t targetMotorIn2 = LOW;
+uint8_t targetMotorIn3 = LOW;
+uint8_t targetMotorIn4 = LOW;
 
 // Status LED Non-Blocking Flash State
 bool isLedActive = false;
@@ -101,6 +110,7 @@ bool isPumpOn = false;
 void processCommand(char cmd);
 void setLocomotion(uint8_t in1, uint8_t in2, uint8_t in3, uint8_t in4, bool moving);
 void stopMotors();
+void updateLocomotionPWM();
 void setPloughPosition(int angle);
 void startSeeding();
 void stopSeeding();
@@ -177,6 +187,7 @@ void loop() {
   }
 
   // 3. Update Non-Blocking Asynchronous Subsystems
+  updateLocomotionPWM();
   updateWatchdog();
   updateServos();
   updateStatusLed();
@@ -195,20 +206,20 @@ void processCommand(char cmd) {
 
   switch (cmd) {
     // --- Locomotion Commands (Calibrated for physical chassis motor polarity) ---
-    case 'F': // Drive All Wheels Forward
-      setLocomotion(HIGH, LOW, LOW, HIGH, true);
-      break;
-
-    case 'B': // Drive All Wheels Reverse
+    case 'F': // Drive All Wheels Forward (Swapped F <-> B)
       setLocomotion(LOW, HIGH, HIGH, LOW, true);
       break;
 
-    case 'L': // Skid-Steer Left
-      setLocomotion(LOW, HIGH, LOW, HIGH, true);
+    case 'B': // Drive All Wheels Reverse (Swapped B <-> F)
+      setLocomotion(HIGH, LOW, LOW, HIGH, true);
       break;
 
-    case 'R': // Skid-Steer Right
+    case 'L': // Skid-Steer Left (Swapped L <-> R)
       setLocomotion(HIGH, LOW, HIGH, LOW, true);
+      break;
+
+    case 'R': // Skid-Steer Right (Swapped R <-> L)
+      setLocomotion(LOW, HIGH, LOW, HIGH, true);
       break;
 
     case 'S': // Emergency / Released Stop
@@ -249,22 +260,48 @@ void processCommand(char cmd) {
 }
 
 // ============================================================================
-// LOCOMOTION SUBSYSTEM
+// LOCOMOTION SUBSYSTEM (Software Duty-Cycle Speed Control)
 // ============================================================================
 void setLocomotion(uint8_t in1, uint8_t in2, uint8_t in3, uint8_t in4, bool moving) {
-  digitalWrite(PIN_MOTOR_IN1, in1);
-  digitalWrite(PIN_MOTOR_IN2, in2);
-  digitalWrite(PIN_MOTOR_IN3, in3);
-  digitalWrite(PIN_MOTOR_IN4, in4);
+  targetMotorIn1 = in1;
+  targetMotorIn2 = in2;
+  targetMotorIn3 = in3;
+  targetMotorIn4 = in4;
   isMoving = moving;
+  if (!isMoving) {
+    stopMotors();
+  }
 }
 
 void stopMotors() {
+  targetMotorIn1 = LOW;
+  targetMotorIn2 = LOW;
+  targetMotorIn3 = LOW;
+  targetMotorIn4 = LOW;
   digitalWrite(PIN_MOTOR_IN1, LOW);
   digitalWrite(PIN_MOTOR_IN2, LOW);
   digitalWrite(PIN_MOTOR_IN3, LOW);
   digitalWrite(PIN_MOTOR_IN4, LOW);
   isMoving = false;
+}
+
+void updateLocomotionPWM() {
+  if (!isMoving) return;
+
+  unsigned long currentCycleOffset = millis() % MOTOR_PWM_CYCLE_MS;
+  if (currentCycleOffset < MOTOR_PWM_ACTIVE_MS) {
+    // Active drive window
+    digitalWrite(PIN_MOTOR_IN1, targetMotorIn1);
+    digitalWrite(PIN_MOTOR_IN2, targetMotorIn2);
+    digitalWrite(PIN_MOTOR_IN3, targetMotorIn3);
+    digitalWrite(PIN_MOTOR_IN4, targetMotorIn4);
+  } else {
+    // Coast / passive window (all pins LOW)
+    digitalWrite(PIN_MOTOR_IN1, LOW);
+    digitalWrite(PIN_MOTOR_IN2, LOW);
+    digitalWrite(PIN_MOTOR_IN3, LOW);
+    digitalWrite(PIN_MOTOR_IN4, LOW);
+  }
 }
 
 // ============================================================================

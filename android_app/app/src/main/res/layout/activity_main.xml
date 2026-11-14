@@ -35,41 +35,15 @@
                     app:tint="@color/primary_green" />
             </FrameLayout>
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="SMART AGRI-ROBOT"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.06" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Precision Field Controller"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
             <TextView
-                android:id="@+id/tvTerminalBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_status_badge"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="5dp"
-                android:text="BT SPP • 9600"
-                android:textColor="@color/primary_green_light"
-                android:textSize="11sp"
-                android:textStyle="bold" />
+                android:layout_marginStart="12dp"
+                android:text="SMART AGRI-ROBOT"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.06" />
         </LinearLayout>
 
         <!-- Bluetooth Connection Card -->
@@ -145,21 +119,12 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TELEMETRY:"
-                    android:textColor="@color/text_muted"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
-
-                <TextView
                     android:id="@+id/tvLastPacket"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
                     android:background="@drawable/bg_status_badge"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="3dp"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
                     android:text="Ready for connection"
                     android:textColor="@color/text_secondary"
                     android:textSize="11sp"
@@ -168,31 +133,15 @@
         </LinearLayout>
 
         <!-- Section 1: Locomotion Control Pad -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:layout_marginBottom="10dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="LOCOMOTION D-PAD"
-                android:textColor="@color/primary_green_light"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.08" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="4WD SKID-STEER"
-                android:textColor="@color/text_muted"
-                android:textSize="10sp"
-                android:textStyle="bold" />
-        </LinearLayout>
+            android:text="LOCOMOTION D-PAD"
+            android:textColor="@color/primary_green_light"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08"
+            android:layout_marginBottom="10dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -204,18 +153,31 @@
             android:layout_marginBottom="20dp">
 
             <!-- Forward Button -->
-            <Button
+            <LinearLayout
                 android:id="@+id/btnForward"
-                android:layout_width="92dp"
-                android:layout_height="76dp"
+                android:layout_width="88dp"
+                android:layout_height="80dp"
                 android:background="@drawable/bg_dpad_btn"
-                app:backgroundTint="@null"
-                android:drawableTop="@drawable/ic_arrow_up"
-                android:paddingTop="12dp"
-                android:text="FWD"
-                android:textColor="@color/text_primary"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_up"
+                    app:tint="@color/text_primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="FWD"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <!-- Middle Row: Left | Stop | Right -->
             <LinearLayout
@@ -225,60 +187,101 @@
                 android:orientation="horizontal"
                 android:layout_marginVertical="12dp">
 
-                <Button
+                <LinearLayout
                     android:id="@+id/btnLeft"
-                    android:layout_width="92dp"
-                    android:layout_height="76dp"
+                    android:layout_width="88dp"
+                    android:layout_height="80dp"
                     android:background="@drawable/bg_dpad_btn"
-                    app:backgroundTint="@null"
-                    android:drawableTop="@drawable/ic_arrow_left"
-                    android:paddingTop="12dp"
-                    android:text="LEFT"
-                    android:textColor="@color/text_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_arrow_left"
+                        app:tint="@color/text_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="LEFT"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
                 <!-- Central Emergency STOP Button -->
                 <Button
                     android:id="@+id/btnEmergencyStop"
-                    android:layout_width="96dp"
+                    android:layout_width="92dp"
                     android:layout_height="80dp"
                     android:layout_marginHorizontal="12dp"
                     android:background="@drawable/bg_stop_btn"
                     app:backgroundTint="@null"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
                     android:text="STOP"
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.05" />
 
-                <Button
+                <LinearLayout
                     android:id="@+id/btnRight"
-                    android:layout_width="92dp"
-                    android:layout_height="76dp"
+                    android:layout_width="88dp"
+                    android:layout_height="80dp"
                     android:background="@drawable/bg_dpad_btn"
-                    app:backgroundTint="@null"
-                    android:drawableTop="@drawable/ic_arrow_right"
-                    android:paddingTop="12dp"
-                    android:text="RIGHT"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_arrow_right"
+                        app:tint="@color/text_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="RIGHT"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Backward Button -->
+            <LinearLayout
+                android:id="@+id/btnBackward"
+                android:layout_width="88dp"
+                android:layout_height="80dp"
+                android:background="@drawable/bg_dpad_btn"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_down"
+                    app:tint="@color/text_primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="REV"
                     android:textColor="@color/text_primary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
-
-            <!-- Backward Button -->
-            <Button
-                android:id="@+id/btnBackward"
-                android:layout_width="92dp"
-                android:layout_height="76dp"
-                android:background="@drawable/bg_dpad_btn"
-                app:backgroundTint="@null"
-                android:drawableTop="@drawable/ic_arrow_down"
-                android:paddingTop="12dp"
-                android:text="REV"
-                android:textColor="@color/text_primary"
-                android:textSize="12sp"
-                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -289,11 +292,11 @@
                 android:textSize="11sp" />
         </LinearLayout>
 
-        <!-- Section 2: Implement Actuation -->
+        <!-- Section 2: Actuation -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="IMPLEMENT ACTUATION"
+            android:text="ACTUATION"
             android:textColor="@color/primary_green_light"
             android:textSize="13sp"
             android:textStyle="bold"
@@ -322,30 +325,15 @@
                     android:src="@drawable/ic_tool_plough" />
             </FrameLayout>
 
-            <LinearLayout
+            <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tillage Plough Blade"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvPloughState"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="TRANSIT • LIFTED (72°)"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11sp" />
-            </LinearLayout>
+                android:text="Tillage Plough Blade"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPlough"
@@ -377,30 +365,15 @@
                     android:src="@drawable/ic_tool_seed" />
             </FrameLayout>
 
-            <LinearLayout
+            <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Seed Sowing Agitator"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvSeedState"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="GATE CLOSED (73°)"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11sp" />
-            </LinearLayout>
+                android:text="Seed Sowing Agitator"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchSeed"
@@ -432,30 +405,15 @@
                     android:src="@drawable/ic_tool_water" />
             </FrameLayout>
 
-            <LinearLayout
+            <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Pressurized Irrigation Pump"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvWaterState"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="PUMP DE-ENERGIZED"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11sp" />
-            </LinearLayout>
+                android:text="Pressurized Irrigation Pump"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchWater"

@@ -2,6 +2,7 @@ package com.agrirobot.smartplough
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -30,20 +31,15 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
     private lateinit var tvLastPacket: TextView
     private lateinit var btnConnectToggle: Button
 
-    private lateinit var btnForward: Button
-    private lateinit var btnBackward: Button
-    private lateinit var btnLeft: Button
-    private lateinit var btnRight: Button
+    private lateinit var btnForward: View
+    private lateinit var btnBackward: View
+    private lateinit var btnLeft: View
+    private lateinit var btnRight: View
     private lateinit var btnEmergencyStop: Button
 
     private lateinit var switchPlough: SwitchCompat
-    private lateinit var tvPloughState: TextView
-
     private lateinit var switchSeed: SwitchCompat
-    private lateinit var tvSeedState: TextView
-
     private lateinit var switchWater: SwitchCompat
-    private lateinit var tvWaterState: TextView
 
     private val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
@@ -53,9 +49,20 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
     ) { permissions ->
         val allGranted = permissions.entries.all { it.value }
         if (allGranted) {
-            openDeviceSelectionDialog()
+            autoConnectToHc05OrPrompt()
         } else {
             Toast.makeText(this, "Bluetooth permissions are required to operate robot.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // Bluetooth Enable Request Launcher
+    private val enableBluetoothLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (bluetoothManager.isBluetoothEnabled()) {
+            autoConnectToHc05OrPrompt()
+        } else {
+            Toast.makeText(this, "Bluetooth must be enabled to connect to robot.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -70,6 +77,9 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
         setupLocomotionTouchListeners()
         setupToolSwitchListeners()
         setupConnectionControls()
+
+        // Auto-check permissions and auto-connect to HC-05 on app start
+        checkPermissionsAndAutoConnect()
     }
 
     private fun initViews() {
@@ -85,13 +95,8 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
         btnEmergencyStop = findViewById(R.id.btnEmergencyStop)
 
         switchPlough = findViewById(R.id.switchPlough)
-        tvPloughState = findViewById(R.id.tvPloughState)
-
         switchSeed = findViewById(R.id.switchSeed)
-        tvSeedState = findViewById(R.id.tvSeedState)
-
         switchWater = findViewById(R.id.switchWater)
-        tvWaterState = findViewById(R.id.tvWaterState)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -145,12 +150,8 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
             v.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
             if (isChecked) {
                 transmitCommand('P')
-                tvPloughState.text = "DEPLOYED • IN-SOIL (120°)"
-                tvPloughState.setTextColor(getColor(R.color.primary_green))
             } else {
                 transmitCommand('p')
-                tvPloughState.text = "TRANSIT • LIFTED (72°)"
-                tvPloughState.setTextColor(getColor(R.color.text_secondary))
             }
         }
 
@@ -159,12 +160,8 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
             v.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
             if (isChecked) {
                 transmitCommand('D')
-                tvSeedState.text = "AGITATING • SOWING (73°-123°)"
-                tvSeedState.setTextColor(getColor(R.color.seed_amber))
             } else {
                 transmitCommand('d')
-                tvSeedState.text = "GATE CLOSED (73°)"
-                tvSeedState.setTextColor(getColor(R.color.text_secondary))
             }
         }
 
@@ -173,12 +170,8 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
             v.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
             if (isChecked) {
                 transmitCommand('W')
-                tvWaterState.text = "PUMP ACTIVE • SPRAYING"
-                tvWaterState.setTextColor(getColor(R.color.water_blue))
             } else {
                 transmitCommand('w')
-                tvWaterState.text = "PUMP DE-ENERGIZED"
-                tvWaterState.setTextColor(getColor(R.color.text_secondary))
             }
         }
     }
@@ -188,34 +181,78 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
             if (bluetoothManager.isConnected) {
                 bluetoothManager.disconnect()
             } else {
-                checkPermissionsAndConnect()
+                checkPermissionsAndManualConnect()
             }
         }
     }
 
-    private fun checkPermissionsAndConnect() {
+    private fun checkPermissionsAndAutoConnect() {
         if (!bluetoothManager.isBluetoothSupported()) {
             Toast.makeText(this, "Bluetooth is not supported on this device.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val requiredPermissions = mutableListOf<String>()
+        val requiredPermissions = getRequiredPermissions()
+        if (requiredPermissions.isNotEmpty()) {
+            requestPermissionLauncher.launch(requiredPermissions.toTypedArray())
+        } else {
+            autoConnectToHc05OrPrompt()
+        }
+    }
 
+    private fun checkPermissionsAndManualConnect() {
+        if (!bluetoothManager.isBluetoothSupported()) {
+            Toast.makeText(this, "Bluetooth is not supported on this device.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val requiredPermissions = getRequiredPermissions()
+        if (requiredPermissions.isNotEmpty()) {
+            requestPermissionLauncher.launch(requiredPermissions.toTypedArray())
+        } else {
+            if (!bluetoothManager.isBluetoothEnabled()) {
+                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                enableBluetoothLauncher.launch(enableBtIntent)
+            } else {
+                openDeviceSelectionDialog()
+            }
+        }
+    }
+
+    private fun getRequiredPermissions(): List<String> {
+        val permissions = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                requiredPermissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+                permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
             }
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                requiredPermissions.add(Manifest.permission.BLUETOOTH_SCAN)
+                permissions.add(Manifest.permission.BLUETOOTH_SCAN)
             }
         } else {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                requiredPermissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+                permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
+        return permissions
+    }
 
-        if (requiredPermissions.isNotEmpty()) {
-            requestPermissionLauncher.launch(requiredPermissions.toTypedArray())
+    @SuppressLint("MissingPermission")
+    private fun autoConnectToHc05OrPrompt() {
+        if (!bluetoothManager.isBluetoothEnabled()) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            enableBluetoothLauncher.launch(enableBtIntent)
+            return
+        }
+
+        val pairedDevices = bluetoothManager.getPairedDevices()
+        val hc05Device = pairedDevices.firstOrNull { device ->
+            val name = device.name ?: ""
+            name.contains("HC-05", ignoreCase = true) || name.contains("HC-06", ignoreCase = true)
+        }
+
+        if (hc05Device != null) {
+            Toast.makeText(this, "Auto-connecting to ${hc05Device.name}...", Toast.LENGTH_SHORT).show()
+            bluetoothManager.connect(hc05Device)
         } else {
             openDeviceSelectionDialog()
         }
@@ -276,13 +313,11 @@ class MainActivity : AppCompatActivity(), BluetoothManager.ConnectionListener {
     }
 
     override fun onDataReceived(data: String) {
-        // Handle incoming telemetry or debug messages from Arduino Uno
         tvLastPacket.text = "Rx: ${data.trim()}"
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // Failsafe: stop motors before teardown
         if (bluetoothManager.isConnected) {
             bluetoothManager.sendCommand('S')
             bluetoothManager.sendCommand('p')
