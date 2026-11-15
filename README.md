@@ -3,6 +3,7 @@
 [![GitHub Release](https://img.shields.io/github/v/release/buildprojecthq/agribot?color=059669&label=Release&logo=github)](https://github.com/buildprojecthq/agribot/releases/tag/v1.0.0)
 [![Target Platform](https://img.shields.io/badge/Platform-Arduino%20Nano%20%28ATmega328P%29-00979D?logo=arduino)](https://www.arduino.cc/)
 [![Companion App](https://img.shields.io/badge/Android%20App-Kotlin%20%7C%20Jetpack-3DDC84?logo=android)](https://github.com/buildprojecthq/agribot/releases/tag/v1.0.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Website](https://img.shields.io/badge/Built%20by-buildproject.in-2563EB)](https://buildproject.in/)
 
 A multi-functional, Bluetooth-controlled agricultural mobile robot engineered for precision farming. The system coordinates **4-wheel differential drive locomotion**, **mechanical soil tillage / furrowing**, **metered seed dispensing**, and **pressurized liquid pesticide spraying** through an Arduino Nano microcontroller and a companion Native Android application.
@@ -165,3 +166,9 @@ Commands are transmitted over Bluetooth SPP at **9600 baud, 8-N-1**:
 * **Developer:** Yashas R
 * **Project Platform:** [buildproject.in](https://buildproject.in/)
 * **Repository:** [buildprojecthq/agribot](https://github.com/buildprojecthq/agribot)
+
+---
+
+## 9. License
+
+This project is open-source and available under the terms of the [MIT License](LICENSE).
