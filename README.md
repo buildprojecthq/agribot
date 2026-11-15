@@ -70,7 +70,7 @@ A multi-functional, Bluetooth-controlled agricultural mobile robot engineered fo
   L298N Motor Driver      Tool Servo              Tool Servo        1-Ch Relay (Active-LOW)
   (50Hz Speed Modulated)  (Plough Lifter)         (Seed Agitator)   (Water / Pesticide)
         |                     |                       |                     |
-  4x Geared DC Motors     Tillage Blade           Seed Hopper Gate      12V DC Water Pump
+  4x 12V Geared Motors    Tillage Blade           Seed Hopper Gate      5V DC Water Pump
   (Skid-Steer 4WD)        (Deploy 120° / Ret 72°) (Agitate 73° - 123°)  (Pressurized Spray)
 ```
 
@@ -82,8 +82,8 @@ To completely eliminate motor back-EMF, ground bounce, and brownout microcontrol
 
 | Power Bus | Voltage | Source | Components Powered |
 | :--- | :--- | :--- | :--- |
-| **High-Current Drive Bus** | **11.1V – 12.6V** | 3S 18650 Li-ion Battery Pack | L298N `+12V` terminal (4x wheel motors) & Water Pump via Relay |
-| **Clean Logic Bus** | **5.0V Regulated** | Single 18650 Cell + SM5401 Boost | Arduino Nano `5V` pin, HC-05 `VCC`, SG90 Servos `VCC`, L298N `+5V` logic |
+| **High-Current Drive Bus** | **11.1V – 12.6V** | 3S 18650 Li-ion Battery Pack | L298N `+12V` terminal (4x 12V 300 RPM wheel motors) |
+| **Clean Logic Bus** | **5.0V Regulated** | Single 18650 Cell + SM5401 Boost | Arduino Nano `5V` pin, HC-05 `VCC`, SG90 Servos `VCC`, 5V Pump (via Relay) |
 | **Common Ground** | **0V Reference** | Unified Ground Bus | Unites Battery (-), SM5401 (-), Nano GND, and L298N GND |
 
 > [!IMPORTANT]
@@ -102,8 +102,8 @@ To completely eliminate motor back-EMF, ground bounce, and brownout microcontrol
 | **`D6`** | L298N `IN3` | Right Motors Forward control |
 | **`D7`** | L298N `IN4` | Right Motors Reverse control |
 | **`D9`** | Seed Dispenser Servo (SG90) | Metered oscillating agitation gate ($73^\circ \leftrightarrow 123^\circ$) |
-| **`D10`** | Plough Lifter Servo (MG996R/SG90) | Mechanical tillage blade lifter ($72^\circ \leftrightarrow 120^\circ$) |
-| **`D12`** | 1-Channel Relay Module | Optocoupled Active-LOW switch for 12V Water Pump |
+| **`D10`** | Plough Lifter Servo (SG90) | Mechanical tillage blade lifter ($72^\circ \leftrightarrow 120^\circ$) |
+| **`D12`** | 1-Channel Relay Module | Optocoupled Active-LOW switch for 5V Water Pump |
 | **`D13`** | Onboard Status LED | Command acknowledgment blinker & watchdog indicator |
 | **`5V`** | Breadboard 5V Rail | Regulated power input from SM5401 boost module |
 | **`GND`** | Breadboard Blue Rail | System common ground |
@@ -156,8 +156,9 @@ Commands are transmitted over Bluetooth SPP at **9600 baud, 8-N-1**:
 ## 7. Project Resources & Downloads
 
 * **Production Release APK:** [SmartAgriRobot-release.apk (GitHub Release v1.0.0)](https://github.com/buildprojecthq/agribot/releases/tag/v1.0.0)
-* **Viva & Components PDF Guide:** [Smart_Agri_Robot_Viva_and_Components_Guide.pdf](file:///home/yashas/Projects/miniproject_agriculture_bot/Smart_Agri_Robot_Viva_and_Components_Guide.pdf)
-* **Relay Benchtop Test Utility:** [`test_relay/test_relay.ino`](file:///home/yashas/Projects/miniproject_agriculture_bot/test_relay/test_relay.ino)
+* **Viva & Components PDF Guide:** [docs/Smart_Agri_Robot_Viva_and_Components_Guide.pdf](docs/Smart_Agri_Robot_Viva_and_Components_Guide.pdf)
+* **Arduino Firmware Source:** [`firmware/firmware.ino`](firmware/firmware.ino)
+* **Wiring & Schematics:** [`docs/WIRING_AND_SCHEMATICS.md`](docs/WIRING_AND_SCHEMATICS.md)
 
 ---
 
