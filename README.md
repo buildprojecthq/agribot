@@ -9,6 +9,38 @@ A multi-functional, Bluetooth-controlled agricultural mobile robot engineered fo
 
 ---
 
+## 📸 Hardware Prototype Showcase
+
+### 1. Front Profile & Mechanical Tillage Assembly
+<p align="center">
+  <img src="docs/images/robot_front_plough.jpg" width="85%" alt="Smart Agri Robot - Front Profile & Tillage Assembly" />
+</p>
+
+> **Front-Angle Overview:** Ground-level frontal perspective illustrating the mechanical plough blade linkage, high-traction agricultural tires, and robust chassis clearance.  
+> **Operational Functionality:** Demonstrates the front servo-actuated tillage mechanism calibrated to penetrate and furrow topsoil at $120^\circ$ and lift to $72^\circ$ for road transit.
+
+---
+
+### 2. Top-Down Architectural Layout & Subsystem Integration
+<p align="center">
+  <img src="docs/images/robot_top_layout.jpg" width="85%" alt="Smart Agri Robot - Top-Down Subsystem Layout" />
+</p>
+
+> **Overhead Layout View:** Orthographic bird's-eye view detailing the symmetrical component placement, balanced weight distribution, and modular subsystem isolation.  
+> **Operational Functionality:** Showcases the central seed agitation hopper, rear fluid reservoir with spray bar, Arduino Nano breadboard bus, and dual-battery power banks.
+
+---
+
+### 3. Isometric Side Profile & Actuation Integration
+<p align="center">
+  <img src="docs/images/robot_isometric_side.jpg" width="85%" alt="Smart Agri Robot - Isometric Side Profile" />
+</p>
+
+> **Isometric Perspective:** Elevated three-quarter perspective highlighting the pressurized irrigation plumbing, optocoupled relay switch, and wireless Bluetooth node.  
+> **Operational Functionality:** Displays the point-to-point wiring harness, L298N finned heatsink, and submersible pump assembly integrated seamlessly onto the 4WD mobile chassis.
+
+---
+
 ## 1. System Architecture
 
 ```
