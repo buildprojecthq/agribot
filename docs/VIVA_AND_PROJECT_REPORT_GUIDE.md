@@ -30,9 +30,9 @@ The **Smart Ploughing and Cultivation Agriculture Robot** is an integrated elect
 | **12V DC High-Torque Geared Motors** | 4 | Drive motors for 4WD differential skid-steer locomotion |
 | **Agricultural High-Traction Robot Rubber Wheels** | 4 | Deep-tread rubber tires providing grip on loose agricultural soil |
 | **TowerPro SG90 Micro Servos (Tillage & Seed Dispenser)** | 2 | Precision actuators for soil tillage blade and seed hopper agitator |
-| **1-Channel 5V Optocoupled Relay Isolation Module** | 1 | Opto-isolated Active-LOW switch driving the 12V water pump |
-| **12V DC Submersible Mini Water Pump** | 1 | Submersible liquid pump spraying water/pesticide from reservoir |
-| **3S 18650 11.1V–12.6V High-Drain Li-ion Battery Pack (Motor Bus)** | 1 | High-current power pack feeding L298N 12V and pump |
+| **1-Channel 5V Optocoupled Relay Isolation Module** | 1 | Opto-isolated Active-LOW switch driving the 5V water pump |
+| **5V DC Submersible Mini Water Pump** | 1 | Submersible liquid pump spraying water/pesticide from reservoir |
+| **3S 18650 11.1V–12.6V High-Drain Li-ion Battery Pack (Motor Bus)** | 1 | High-current power pack feeding L298N 12V terminal |
 | **Single 18650 Cell + SM5401 5V Step-Up Boost Module (Logic Bus)** | 1 | Clean, isolated 5.0V power source for Nano, HC-05, and servos |
 
 ### 2.2 Microcontroller: ATmega328P (Arduino Nano V3.0)
@@ -42,8 +42,8 @@ The **Smart Ploughing and Cultivation Agriculture Robot** is an integrated elect
 * **Breadboard Mounting:** Sits in a half-size solderless breadboard, insulating solder joints from the metal chassis.
 
 ### 2.3 Power Architecture: Dual-Isolated Buses (Method 2)
-* **High-Current Drive Bus:** 3S Li-ion Battery pack (3x 3.7V 18650 cells in series, nominal $11.1\text{V}$, full charge $12.6\text{V}$) directly powering the L298N `+12V` terminal for the 4 geared motors and the water pump.
-* **Clean Logic Bus:** Single blue 18650 cell stepped up to 5.0V regulated via an SM5401 synchronous boost module, powering the Nano, HC-05, servos, and relay coil.
+* **High-Current Drive Bus:** 3S Li-ion Battery pack (3x 3.7V 18650 cells in series, nominal $11.1\text{V}$, full charge $12.6\text{V}$) directly powering the L298N `+12V` terminal for the 4 geared motors.
+* **Clean Logic Bus:** Single blue 18650 cell stepped up to 5.0V regulated via an SM5401 synchronous boost module, powering the Nano, HC-05, servos, relay coil, and 5V water pump.
 * **Common Ground Bus:** Unifies 12V Battery (-), SM5401 (-), Arduino GND, and L298N GND to establish a common 0V voltage reference.
 * **L298N Jumper:** Onboard 5V-EN jumper cap is **removed** to isolate 12V motor voltage from the 5V logic bus.
 
@@ -65,14 +65,14 @@ The **Smart Ploughing and Cultivation Agriculture Robot** is an integrated elect
 2. **Seed Dispenser (TowerPro SG90 Micro Servo):**
    * Active mechanical agitator oscillating between $73^\circ$ and $123^\circ$ every $20\text{ ms}$ to prevent seed clumping and achieve uniform gravity discharge.
 3. **Irrigation Sprayer (Submersible DC Pump + 1-Channel Relay on Pin D12):**
-   * Optocoupler-isolated relay module configured in Active-LOW mode to safely isolate the digital logic from the inductive flyback of the 12V pump motor.
+   * Optocoupler-isolated relay module configured in Active-LOW mode to safely isolate the digital logic from the inductive switching of the 5V pump motor.
 
 ---
 
 ## 3. Comprehensive Viva Voce Questions & Answers
 
 ### Q1: Why did you use two separate battery sources (Method 2) instead of a single 12V battery with a regulator?
-**Answer:** DC motors and water pumps are heavy inductive loads. Under soil resistance, the 4 motors can momentarily pull several amperes, causing a severe voltage drop (sag) on the battery rail. If the Arduino shares that same power rail, the voltage dips below its 4.3V brownout threshold, causing the microcontroller to reboot in an infinite loop. By adopting our **dual-isolated architecture (Method 2)**, the 3S 12V pack powers only the motors and pump, while a separate blue 18650 cell boosted to 5.0V powers the Arduino and logic. This guarantees 100% stability.
+**Answer:** DC motors and water pumps are heavy inductive loads. Under soil resistance, the 4 motors can momentarily pull several amperes, causing a severe voltage drop (sag) on the battery rail. If the Arduino shares that same power rail, the voltage dips below its 4.3V brownout threshold, causing the microcontroller to reboot in an infinite loop. By adopting our **dual-isolated architecture (Method 2)**, the 3S 12V pack powers only the high-draw wheel motors, while a separate blue 18650 cell boosted to 5.0V powers the Arduino and logic. This guarantees 100% stability.
 
 ### Q2: Why is the voltage divider mandatory between the Arduino TX and HC-05 RX pin?
 **Answer:** The HC-05 transceiver chipset runs on $3.3\text{V}$ logic levels. The Arduino outputs $5.0\text{V}$ TTL. Connecting the Arduino TX directly into HC-05 RX stresses the baseband input diodes and will permanently degrade the receiver. A voltage divider consisting of $R_1 = 1\text{ k}\Omega$ and $R_2 = 2\text{ k}\Omega$ produces:

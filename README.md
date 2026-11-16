@@ -70,7 +70,7 @@ A multi-functional, Bluetooth-controlled agricultural mobile robot engineered fo
   L298N Motor Driver      Tool Servo              Tool Servo        1-Ch Relay (Active-LOW)
   (50Hz Speed Modulated)  (Plough Lifter)         (Seed Agitator)   (Water / Pesticide)
         |                     |                       |                     |
-  12V Geared Motors       Tillage Blade           Seed Hopper Gate      12V DC Water Pump
+  12V Geared Motors       Tillage Blade           Seed Hopper Gate      5V DC Water Pump
   (Skid-Steer 4WD)        (Deploy 120° / Ret 72°) (Agitate 73° - 123°)  (Pressurized Spray)
 ```
 
@@ -82,8 +82,8 @@ To completely eliminate motor back-EMF, ground bounce, and brownout microcontrol
 
 | Power Bus | Voltage | Source | Components Powered |
 | :--- | :--- | :--- | :--- |
-| **High-Current Drive Bus** | **11.1V – 12.6V** | 3S 18650 Li-ion Battery Pack | L298N `+12V` terminal (4x 12V high-torque wheel motors) & 12V Water Pump via Relay |
-| **Clean Logic Bus** | **5.0V Regulated** | Single 18650 Cell + SM5401 Boost | Arduino Nano `5V` pin, HC-05 `VCC`, SG90 Servos `VCC`, L298N `+5V` logic |
+| **High-Current Drive Bus** | **11.1V – 12.6V** | 3S 18650 Li-ion Battery Pack | L298N `+12V` terminal (4x 12V high-torque wheel motors) |
+| **Clean Logic Bus** | **5.0V Regulated** | Single 18650 Cell + SM5401 Boost | Arduino Nano `5V` pin, HC-05 `VCC`, SG90 Servos `VCC`, 5V Water Pump (via Relay), L298N `+5V` logic |
 | **Common Ground** | **0V Reference** | Unified Ground Bus | Unites Battery (-), SM5401 (-), Nano GND, and L298N GND |
 
 > [!IMPORTANT]
@@ -105,7 +105,7 @@ Components bench-tested by our engineering team with direct Indian electronic di
 | Agricultural High-Traction Robot Rubber Wheels | 4 |
 | TowerPro SG90 Micro Servos (Tillage & Seed Dispenser) | 2 |
 | 1-Channel 5V Optocoupled Relay Isolation Module | 1 |
-| 12V DC Submersible Mini Water Pump | 1 |
+| 5V DC Submersible Mini Water Pump | 1 |
 | 3S 18650 11.1V–12.6V High-Drain Li-ion Battery Pack (Motor Bus) | 1 |
 | Single 18650 Cell + SM5401 5V Step-Up Boost Module (Logic Bus) | 1 |
 
@@ -123,7 +123,7 @@ Components bench-tested by our engineering team with direct Indian electronic di
 | **`D7`** | L298N `IN4` | Right Motors Reverse control |
 | **`D9`** | Seed Dispenser Servo (TowerPro SG90) | Metered oscillating agitation gate ($73^\circ \leftrightarrow 123^\circ$) |
 | **`D10`** | Plough Lifter Servo (TowerPro SG90) | Mechanical tillage blade lifter ($72^\circ \leftrightarrow 120^\circ$) |
-| **`D12`** | 1-Channel Relay Module | Optocoupled Active-LOW switch for 12V Water Pump |
+| **`D12`** | 1-Channel Relay Module | Optocoupled Active-LOW switch for 5V Water Pump |
 | **`D13`** | Onboard Status LED | Command acknowledgment blinker & watchdog indicator |
 | **`5V`** | Breadboard 5V Rail | Regulated power input from SM5401 boost module |
 | **`GND`** | Breadboard Blue Rail | System common ground |

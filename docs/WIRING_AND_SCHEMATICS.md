@@ -16,9 +16,9 @@ This document provides the complete, pin-by-pin interconnection matrix, voltage 
 | **12V DC High-Torque Geared Motors** | 4 | Drive motors for 4WD differential skid-steer locomotion |
 | **Agricultural High-Traction Robot Rubber Wheels** | 4 | Deep-tread rubber tires providing grip on loose agricultural soil |
 | **TowerPro SG90 Micro Servos (Tillage & Seed Dispenser)** | 2 | Precision actuators for soil tillage blade and seed hopper agitator |
-| **1-Channel 5V Optocoupled Relay Isolation Module** | 1 | Opto-isolated Active-LOW switch driving the 12V water pump |
-| **12V DC Submersible Mini Water Pump** | 1 | Submersible liquid pump spraying water/pesticide from reservoir |
-| **3S 18650 11.1V–12.6V High-Drain Li-ion Battery Pack (Motor Bus)** | 1 | High-current power pack feeding L298N 12V and pump |
+| **1-Channel 5V Optocoupled Relay Isolation Module** | 1 | Opto-isolated Active-LOW switch driving the 5V water pump |
+| **5V DC Submersible Mini Water Pump** | 1 | Submersible liquid pump spraying water/pesticide from reservoir |
+| **3S 18650 11.1V–12.6V High-Drain Li-ion Battery Pack (Motor Bus)** | 1 | High-current power pack feeding L298N 12V terminal |
 | **Single 18650 Cell + SM5401 5V Step-Up Boost Module (Logic Bus)** | 1 | Clean, isolated 5.0V power source for Nano, HC-05, and servos |
 
 ---
@@ -56,7 +56,7 @@ This document provides the complete, pin-by-pin interconnection matrix, voltage 
                      | (12V Motor Bus)   |                                 v            |
                      v                   |                        +------------------+  |
            4x 12V Geared Motors          |                        | Breadboard Red   |  |
-           & Water Pump (via Relay COM)  |                        | 5.0V Power Bus   |  |
+                                        |                        | 5.0V Power Bus   |  |
                                          |                        +------------------+  |
                                          |                           |   |   |   |      |
                                          |    Arduino Nano 5V Pin <--+   |   |   |      |
@@ -120,9 +120,9 @@ $$V_{\text{out}} = V_{\text{in}} \times \frac{R_2}{R_1 + R_2} = 5.0\text{ V} \ti
   * Relay `GND` -> Breadboard Blue `GND`
   * Relay `IN` -> Arduino Nano Pin `D12`
 * **Load Circuit:**
-  * 12V Battery Pack `(+)` -> Relay `COM` (Common terminal)
-  * Relay `NO` (Normally Open) -> 12V Submersible Pump `(+)` Red Wire
-  * 12V Submersible Pump `(-)` Black Wire -> Common `GND`
+  * Breadboard Red `5V` Rail `(+)` -> Relay `COM` (Common terminal)
+  * Relay `NO` (Normally Open) -> 5V Submersible Pump `(+)` Red Wire
+  * 5V Submersible Pump `(-)` Black Wire -> Common `GND`
 * **Software Safety:** The firmware initializes pin `D12` to `HIGH` before declaring it `OUTPUT` to prevent momentary relay clicks during boot.
 
 ---
