@@ -1,77 +1,83 @@
 # Hardware Wiring & Schematic Guide
 ## Smart Ploughing and Cultivation Agriculture Robot
 
-This document provides the complete, pin-by-pin interconnection matrix, voltage divider schematic, and power distribution architecture.
+This document provides the complete, pin-by-pin interconnection matrix, voltage divider schematic, and dual-isolated power distribution architecture (Method 2).
 
 ---
 
-## 1. Master Pin Allocation Matrix
+## 1. Itemized Hardware Bill of Materials (BOM)
 
-| Arduino Uno Pin | Component / Subsystem | Pin on Module | Signal Direction | Electrical / Logic Level |
-| :--- | :--- | :--- | :--- | :--- |
-| **D2** | HC-05 Bluetooth Module | **TXD** | Input to Arduino | 3.3V TTL (Meets Uno 5V TTL high threshold $\ge 3.0\text{V}$) |
-| **D3** | HC-05 Bluetooth Module | **RXD** | Output from Arduino | **5V stepped down to 3.3V** via 1kΩ/2kΩ divider |
-| **D4** | L298N / L293D Motor Driver | **IN1** | Output | 5V TTL Logic (Left Motors Forward) |
-| **D5** | L298N / L293D Motor Driver | **IN2** | Output | 5V TTL Logic (Left Motors Reverse) |
-| **D6** | L298N / L293D Motor Driver | **IN3** | Output | 5V TTL Logic (Right Motors Forward) |
-| **D7** | L298N / L293D Motor Driver | **IN4** | Output | 5V TTL Logic (Right Motors Reverse) |
-| **D8** | 1-Channel Relay Module | **IN** | Output | Active-LOW trigger (LOW = Pump ON, HIGH = Pump OFF) |
-| **D9** | Seed Metering Servo (MG90S) | **Signal (Orange/Yellow)**| Output | 50 Hz Hardware PWM; VCC from LM2596 5V rail |
-| **D10** | Plough Lifter Servo (MG996R) | **Signal (Orange/White)**| Output | 50 Hz Hardware PWM; VCC from LM2596 5V rail |
-| **D13** | Status Indicator LED | Onboard LED | Output | Pulses for 70 ms on valid Bluetooth command |
-| **GND** | Common Ground Bus | GND | Power | Unified Ground for all system modules |
-| **5V / Vin** | LM2596 Buck Converter | **OUT (+)** | Power Input | Regulated 5.0V DC (3A max) |
+| Component Description | Qty | Role in Robot |
+| :--- | :---: | :--- |
+| **Arduino Nano V3.0 (ATmega328P 16MHz) Microcontroller** | 1 | Master embedded controller running non-blocking firmware |
+| **HC-05 Bluetooth 2.0 Serial Pass-Through Module** | 1 | Wireless telemetry link receiving SPP commands @ 9600 bps |
+| **L298N Dual H-Bridge High-Power Motor Driver Module** | 1 | Dual H-bridge driver switching 12V power to wheel motors |
+| **4WD Mobile Robot Chassis Frame** | 1 | Structural chassis supporting tools, tanks, and electronics |
+| **12V DC High-Torque Geared Motors** | 4 | Drive motors for 4WD differential skid-steer locomotion |
+| **Agricultural High-Traction Robot Rubber Wheels** | 4 | Deep-tread rubber tires providing grip on loose agricultural soil |
+| **TowerPro SG90 Micro Servos (Tillage & Seed Dispenser)** | 2 | Precision actuators for soil tillage blade and seed hopper agitator |
+| **1-Channel 5V Optocoupled Relay Isolation Module** | 1 | Opto-isolated Active-LOW switch driving the 12V water pump |
+| **12V DC Submersible Mini Water Pump** | 1 | Submersible liquid pump spraying water/pesticide from reservoir |
+| **3S 18650 11.1V–12.6V High-Drain Li-ion Battery Pack (Motor Bus)** | 1 | High-current power pack feeding L298N 12V and pump |
+| **Single 18650 Cell + SM5401 5V Step-Up Boost Module (Logic Bus)** | 1 | Clean, isolated 5.0V power source for Nano, HC-05, and servos |
 
 ---
 
-## 2. Power Distribution Architecture
+## 2. Master Pin Allocation Matrix
+
+| Arduino Nano Pin | Component / Subsystem | Pin on Module | Signal Direction | Electrical / Logic Level |
+| :---: | :--- | :--- | :--- | :--- |
+| **`D2`** | HC-05 Bluetooth Module | **`TXD`** | Input to Arduino | 3.3V TTL (Meets Nano 5V TTL high threshold $\ge 3.0\text{V}$) |
+| **`D3`** | HC-05 Bluetooth Module | **`RXD`** | Output from Arduino | **5V stepped down to 3.3V** via 1kΩ/2kΩ divider |
+| **`D4`** | L298N Motor Driver | **`IN1`** | Output | Left Motors Forward control |
+| **`D5`** | L298N Motor Driver | **`IN2`** | Output | Left Motors Reverse control |
+| **`D6`** | L298N Motor Driver | **`IN3`** | Output | Right Motors Forward control |
+| **`D7`** | L298N Motor Driver | **`IN4`** | Output | Right Motors Reverse control |
+| **`D9`** | Seed Metering Servo (TowerPro SG90) | **Signal (Orange/Yellow)**| Output | 50 Hz PWM; VCC from SM5401 5V rail ($73^\circ \leftrightarrow 123^\circ$) |
+| **`D10`** | Plough Lifter Servo (TowerPro SG90) | **Signal (Orange/Yellow)**| Output | 50 Hz PWM; VCC from SM5401 5V rail ($72^\circ \leftrightarrow 120^\circ$) |
+| **`D12`** | 1-Channel Relay Module | **`IN`** | Output | Active-LOW trigger (LOW = Pump ON, HIGH = Pump OFF) |
+| **`D13`** | Status Indicator LED | Onboard LED | Output | Pulses for 70 ms on valid Bluetooth command |
+| **`GND`** | Common Ground Bus | `GND` | Power | Unified Ground for all system modules |
+| **`5V`** | Breadboard Red Rail | `5V` | Power Input | Regulated 5.0V DC from SM5401 boost module |
+
+---
+
+## 3. Dual-Isolated Power Architecture (Method 2)
 
 ```
-                       [ 12V 3S Li-ion Battery Pack / 11.1V - 12.6V ]
-                                     |
-                +--------------------+--------------------+
-                | (+) 12V                                 | (-) GND (BAT-)
-                v                                         v
-   +-------------------------+               +--------------------------+
-   |   L298N Motor Driver    |               |  LM2596 Buck Converter   |
-   |   12V Power Terminal    |               |  IN (+)         IN (-)   |
-   +-------------------------+               +--------------------------+
-                |                                         |
-                | (Drives 4x 12V DC Motors)               | Regulates down to 5.0V DC (3A)
-                |                                         v
-                |                            +--------------------------+
-                |                            |  OUT (+)        OUT (-)  |
-                |                            +--------------------------+
-                |                                 |             |
-                |                                 |             +============+
-                |                                 v                          |
-                |                         +---------------+                  |
-                |                         |  5.0V Bus (+) |                  |
-                |                         +---------------+                  |
-                |                            |   |   |   |                   |
-                |  +-------------------------+   |   |   |                   |
-                |  | Arduino 5V Pin              |   |   |                   |
-                |  | Relay VCC Pin               |   |   |                   |
-                |  | MG996R Plough Servo VCC ----+   |   |                   |
-                |  | MG90S Seed Servo VCC -----------+   |                   |
-                |  | HC-05 VCC Pin ----------------------+                   |
-                |                                                            |
-                +============================================================+
-                                              |
-                                    [ COMMON GROUND BUS ]
-                        (Battery (-), LM2596 IN/OUT (-), Arduino GND,
-                         L298N Logic GND, Relay GND, Servos GND, HC-05 GND)
+        [ 3S 18650 Li-ion Battery Pack (11.1V - 12.6V) ]      [ Single 18650 Cell (3.7V - 4.2V) ]
+                                |                                              |
+                                v                                              v
+                 +-------------------------------+             +-------------------------------+
+                 |  L298N Motor Driver Terminal  |             |  SM5401 5V Step-Up Boost PCB  |
+                 |  +12V Power      GND Terminal |             |  5V (+) Output  GND (-) Output|
+                 +-------------------------------+             +-------------------------------+
+                     |                   |                                 |            |
+                     | (12V Motor Bus)   |                                 v            |
+                     v                   |                        +------------------+  |
+           4x 12V Geared Motors          |                        | Breadboard Red   |  |
+           & Water Pump (via Relay COM)  |                        | 5.0V Power Bus   |  |
+                                         |                        +------------------+  |
+                                         |                           |   |   |   |      |
+                                         |    Arduino Nano 5V Pin <--+   |   |   |      |
+                                         |    Relay Module VCC <---------+   |   |      |
+                                         |    TowerPro SG90 Servos VCC ------+   |      |
+                                         |    HC-05 Bluetooth VCC ---------------+      |
+                                         |                                              |
+                                         +==============================================+
+                                                                 |
+                                                       [ COMMON GROUND BUS ]
+                                                  (Breadboard Blue (-) Ground Rail)
 ```
 
 > [!IMPORTANT]
-> **Why LM2596 instead of 7805?**
-> The high-torque MG996R plough servo draws up to **$2.5\text{ A}$ stall current** when lifting against soil friction. An older 7805 regulator is limited to $1.0\text{ A}$ and dissipates $(12\text{V} - 5\text{V}) \times 1\text{A} = 7\text{ Watts}$ of pure heat, causing immediate thermal shutdown and Arduino brownout resets. The LM2596 switching regulator provides up to **3.0A continuous** at over 90% efficiency without overheating.
+> **L298N 5V-EN Jumper Cap:** Must be **REMOVED**. The L298N logic is powered via its `+5V` terminal directly from the breadboard 5V rail, keeping the high-noise 12V motor supply isolated while sharing common ground.
 
 ---
 
-## 3. HC-05 UART Voltage Divider
+## 4. HC-05 UART Voltage Divider
 
-The HC-05 Bluetooth module has a $3.3\text{V}$ RX pin. Sending a $5\text{V}$ logic signal from Arduino pin `D3` directly into the HC-05 RX pin can degrade or damage the Bluetooth module over time.
+The HC-05 Bluetooth module has a $3.3\text{V}$ RX pin. Sending a $5\text{V}$ logic signal from Arduino pin `D3` directly into the HC-05 RX pin can degrade or damage the Bluetooth receiver over time.
 
 Use two resistors to form a voltage divider:
 * $R_1 = 1\text{ k}\Omega$ (between Arduino `D3` and HC-05 `RXD`)
@@ -87,50 +93,43 @@ $$V_{\text{out}} = V_{\text{in}} \times \frac{R_2}{R_1 + R_2} = 5.0\text{ V} \ti
                                       GND
 ```
 
-*Note:* Arduino `D2` (RX) connects directly to HC-05 `TXD`. The HC-05 transmits at $3.3\text{V}$, which is recognized as logic HIGH by the ATmega328P ($V_{IH} \ge 3.0\text{V}$).
-
 ---
 
-## 4. L298N / L293D Motor Driver Wiring
+## 5. L298N Motor Driver Wiring & Direction Truth Table
 
 * **Left Motors:** 2x 12V Geared Motors wired in parallel to OUT1 & OUT2.
 * **Right Motors:** 2x 12V Geared Motors wired in parallel to OUT3 & OUT4.
-* **ENA & ENB Jumpers:** Keep the default onboard jumpers installed on ENA and ENB (full 100% duty cycle speed).
+* **Speed Modulation:** Software duty-cycle PWM ($50\text{ Hz}$, 75% duty cycle) slows wheels by ~25% for smooth, controlled motion.
 
-### Direction Truth Table:
-| Operation | Command | IN1 (D4) | IN2 (D5) | IN3 (D6) | IN4 (D7) | Left Side | Right Side |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Forward** | `'F'` | HIGH | LOW | HIGH | LOW | FWD | FWD |
-| **Reverse** | `'B'` | LOW | HIGH | LOW | HIGH | REV | REV |
-| **Skid Left** | `'L'` | LOW | HIGH | HIGH | LOW | REV | FWD |
-| **Skid Right** | `'R'` | HIGH | LOW | LOW | HIGH | FWD | REV |
-| **Hard Stop** | `'S'` | LOW | LOW | LOW | LOW | STOP | STOP |
+### Calibrated Direction Truth Table:
+| Operation | Command | IN1 (D4) | IN2 (D5) | IN3 (D6) | IN4 (D7) | Left Channel | Right Channel | Speed |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Forward** | `'F'` | LOW | HIGH | HIGH | LOW | FWD | FWD | 75% Duty Cycle |
+| **Backward** | `'B'` | HIGH | LOW | LOW | HIGH | REV | REV | 75% Duty Cycle |
+| **Skid Left** | `'L'` | HIGH | LOW | HIGH | LOW | REV | FWD | 75% Duty Cycle |
+| **Skid Right** | `'R'` | LOW | HIGH | LOW | HIGH | FWD | REV | 75% Duty Cycle |
+| **Hard Stop** | `'S'` | LOW | LOW | LOW | LOW | STOP | STOP | 0% |
 
 ---
 
-## 5. Water Pump & 1-Channel Relay Interfacing
+## 6. Water Pump & 1-Channel Relay Interfacing
 
 * **Relay Type:** Optocoupler-isolated 5V 1-Channel Relay (Active-LOW).
 * **Connections:**
-  * Relay `VCC` -> LM2596 `+5V`
-  * Relay `GND` -> Common `GND`
-  * Relay `IN` -> Arduino Pin `D8`
+  * Relay `VCC` -> Breadboard Red `+5V`
+  * Relay `GND` -> Breadboard Blue `GND`
+  * Relay `IN` -> Arduino Nano Pin `D12`
 * **Load Circuit:**
-  * 12V Battery `(+)` -> Relay `COM` (Common terminal)
-  * Relay `NO` (Normally Open) -> DC Water Pump `(+)`
-  * DC Water Pump `(-)` -> Common `GND`
-* **Software Safety:** The firmware initializes pin `D8` to `HIGH` before declaring it `OUTPUT` to prevent momentary relay clicks during boot.
+  * 12V Battery Pack `(+)` -> Relay `COM` (Common terminal)
+  * Relay `NO` (Normally Open) -> 12V Submersible Pump `(+)` Red Wire
+  * 12V Submersible Pump `(-)` Black Wire -> Common `GND`
+* **Software Safety:** The firmware initializes pin `D12` to `HIGH` before declaring it `OUTPUT` to prevent momentary relay clicks during boot.
 
 ---
 
-## 6. Servos Interfacing (Plough & Seed Dispenser)
+## 7. Servos Interfacing (Plough & Seed Dispenser)
 
-| Servo Function | Model | Control Pin | Power (VCC) | Ground |
-| :--- | :--- | :--- | :--- | :--- |
-| **Plough Lifter** | TowerPro MG996R (Metal Gear) | Pin `D10` | LM2596 `+5V` rail | Common `GND` |
-| **Seed Dispenser** | TowerPro MG90S (Micro Metal) | Pin `D9` | LM2596 `+5V` rail | Common `GND` |
-
-> [!CAUTION]
-> **NEVER connect the servo red VCC wire to the Arduino Uno 5V onboard pin!**
-> The Uno's onboard regulator can only output $\approx 400\text{--}500\text{ mA}$. When an MG996R moves, it pulls up to $1.5\text{ A}$, which will cause the Arduino to reset continuously. Connect servo VCC directly to the output of the LM2596 buck converter.
-
+| Servo Function | Model | Control Pin | Power (VCC) | Ground | Calibrated Motion |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| **Plough Lifter** | TowerPro SG90 | Pin `D10` | Breadboard `+5V` rail | Common `GND` | Retracted: $72^\circ$ \| Deployed: $120^\circ$ |
+| **Seed Dispenser** | TowerPro SG90 | Pin `D9` | Breadboard `+5V` rail | Common `GND` | Closed: $73^\circ$ \| Agitation: $73^\circ \leftrightarrow 123^\circ$ |

@@ -70,7 +70,7 @@ A multi-functional, Bluetooth-controlled agricultural mobile robot engineered fo
   L298N Motor Driver      Tool Servo              Tool Servo        1-Ch Relay (Active-LOW)
   (50Hz Speed Modulated)  (Plough Lifter)         (Seed Agitator)   (Water / Pesticide)
         |                     |                       |                     |
-  4x 12V Geared Motors    Tillage Blade           Seed Hopper Gate      5V DC Water Pump
+  12V Geared Motors       Tillage Blade           Seed Hopper Gate      12V DC Water Pump
   (Skid-Steer 4WD)        (Deploy 120° / Ret 72°) (Agitate 73° - 123°)  (Pressurized Spray)
 ```
 
@@ -82,8 +82,8 @@ To completely eliminate motor back-EMF, ground bounce, and brownout microcontrol
 
 | Power Bus | Voltage | Source | Components Powered |
 | :--- | :--- | :--- | :--- |
-| **High-Current Drive Bus** | **11.1V – 12.6V** | 3S 18650 Li-ion Battery Pack | L298N `+12V` terminal (4x 12V 300 RPM wheel motors) |
-| **Clean Logic Bus** | **5.0V Regulated** | Single 18650 Cell + SM5401 Boost | Arduino Nano `5V` pin, HC-05 `VCC`, SG90 Servos `VCC`, 5V Pump (via Relay) |
+| **High-Current Drive Bus** | **11.1V – 12.6V** | 3S 18650 Li-ion Battery Pack | L298N `+12V` terminal (4x 12V high-torque wheel motors) & 12V Water Pump via Relay |
+| **Clean Logic Bus** | **5.0V Regulated** | Single 18650 Cell + SM5401 Boost | Arduino Nano `5V` pin, HC-05 `VCC`, SG90 Servos `VCC`, L298N `+5V` logic |
 | **Common Ground** | **0V Reference** | Unified Ground Bus | Unites Battery (-), SM5401 (-), Nano GND, and L298N GND |
 
 > [!IMPORTANT]
@@ -91,7 +91,27 @@ To completely eliminate motor back-EMF, ground bounce, and brownout microcontrol
 
 ---
 
-## 3. Hardware Pin Mapping
+## 3. Itemized Hardware Bill of Materials (BOM)
+
+Components bench-tested by our engineering team with direct Indian electronic distributor sources.
+
+| Component Description | Qty |
+| :--- | :---: |
+| Arduino Nano V3.0 (ATmega328P 16MHz) Microcontroller | 1 |
+| HC-05 Bluetooth 2.0 Serial Pass-Through Module | 1 |
+| L298N Dual H-Bridge High-Power Motor Driver Module | 1 |
+| 4WD Mobile Robot Chassis Frame | 1 |
+| 12V DC High-Torque Geared Motors | 4 |
+| Agricultural High-Traction Robot Rubber Wheels | 4 |
+| TowerPro SG90 Micro Servos (Tillage & Seed Dispenser) | 2 |
+| 1-Channel 5V Optocoupled Relay Isolation Module | 1 |
+| 12V DC Submersible Mini Water Pump | 1 |
+| 3S 18650 11.1V–12.6V High-Drain Li-ion Battery Pack (Motor Bus) | 1 |
+| Single 18650 Cell + SM5401 5V Step-Up Boost Module (Logic Bus) | 1 |
+
+---
+
+## 4. Hardware Pin Mapping
 
 | Arduino Nano Pin | Connected Component | Functionality / Calibration |
 | :---: | :--- | :--- |
@@ -101,16 +121,16 @@ To completely eliminate motor back-EMF, ground bounce, and brownout microcontrol
 | **`D5`** | L298N `IN2` | Left Motors Reverse control |
 | **`D6`** | L298N `IN3` | Right Motors Forward control |
 | **`D7`** | L298N `IN4` | Right Motors Reverse control |
-| **`D9`** | Seed Dispenser Servo (SG90) | Metered oscillating agitation gate ($73^\circ \leftrightarrow 123^\circ$) |
-| **`D10`** | Plough Lifter Servo (SG90) | Mechanical tillage blade lifter ($72^\circ \leftrightarrow 120^\circ$) |
-| **`D12`** | 1-Channel Relay Module | Optocoupled Active-LOW switch for 5V Water Pump |
+| **`D9`** | Seed Dispenser Servo (TowerPro SG90) | Metered oscillating agitation gate ($73^\circ \leftrightarrow 123^\circ$) |
+| **`D10`** | Plough Lifter Servo (TowerPro SG90) | Mechanical tillage blade lifter ($72^\circ \leftrightarrow 120^\circ$) |
+| **`D12`** | 1-Channel Relay Module | Optocoupled Active-LOW switch for 12V Water Pump |
 | **`D13`** | Onboard Status LED | Command acknowledgment blinker & watchdog indicator |
 | **`5V`** | Breadboard 5V Rail | Regulated power input from SM5401 boost module |
 | **`GND`** | Breadboard Blue Rail | System common ground |
 
 ---
 
-## 4. Communication Protocol (Single-Byte ASCII)
+## 5. Communication Protocol (Single-Byte ASCII)
 
 Commands are transmitted over Bluetooth SPP at **9600 baud, 8-N-1**:
 
@@ -130,7 +150,7 @@ Commands are transmitted over Bluetooth SPP at **9600 baud, 8-N-1**:
 
 ---
 
-## 5. Firmware Technical Highlights
+## 6. Firmware Technical Highlights
 
 1. **Software Duty-Cycle Speed Control (~25% Slower):**
    * Implements a non-blocking $50\text{ Hz}$ ($20\text{ ms}$) software PWM loop in `firmware.ino` (`MOTOR_DUTY_PERCENT = 75`).
@@ -144,7 +164,7 @@ Commands are transmitted over Bluetooth SPP at **9600 baud, 8-N-1**:
 
 ---
 
-## 6. Native Android Companion App
+## 7. Native Android Companion App
 
 * **Auto Bluetooth Management:** Automatically checks permissions, turns on Bluetooth, discovers the paired **`HC-05`** module, and connects instantly on launch.
 * **Touch-and-Hold Steering:** Intuitive D-Pad controls where holding down an arrow drives the robot and releasing instantly stops.
@@ -153,7 +173,7 @@ Commands are transmitted over Bluetooth SPP at **9600 baud, 8-N-1**:
 
 ---
 
-## 7. Project Resources & Downloads
+## 8. Project Resources & Downloads
 
 * **Production Release APK:** [SmartAgriRobot-release.apk (GitHub Release v1.0.0)](https://github.com/buildprojecthq/agribot/releases/tag/v1.0.0)
 * **Viva & Components PDF Guide:** [docs/Smart_Agri_Robot_Viva_and_Components_Guide.pdf](docs/Smart_Agri_Robot_Viva_and_Components_Guide.pdf)
@@ -162,7 +182,7 @@ Commands are transmitted over Bluetooth SPP at **9600 baud, 8-N-1**:
 
 ---
 
-## 8. Authors & Credits
+## 9. Authors & Credits
 
 * **Developer:** Yashas R
 * **Project Platform:** [buildproject.in](https://buildproject.in/)
@@ -170,6 +190,6 @@ Commands are transmitted over Bluetooth SPP at **9600 baud, 8-N-1**:
 
 ---
 
-## 9. License
+## 10. License
 
 This project is open-source and available under the terms of the [MIT License](LICENSE).

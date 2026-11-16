@@ -15,9 +15,9 @@
  * Pin D5  : L298N / L293D IN2 (Left Motor Reverse)
  * Pin D6  : L298N / L293D IN3 (Right Motor Forward)
  * Pin D7  : L298N / L293D IN4 (Right Motor Reverse)
- * Pin D8  : 1-Channel Relay Module (Active-LOW: LOW=ON, HIGH=OFF) -> Water Pump
- * Pin D9  : Seed Dispenser Servo (MG90S PWM)
- * Pin D10 : Plough Lifter Servo (MG996R PWM)
+ * Pin D9  : Seed Dispenser Servo (TowerPro SG90 Micro Servo PWM)
+ * Pin D10 : Plough Lifter Servo (TowerPro SG90 Micro Servo PWM)
+ * Pin D12 : 1-Channel Relay Module (Active-LOW: LOW=ON, HIGH=OFF) -> Water Pump
  * Pin D13 : Onboard Status Indicator LED
  * ----------------------------------------------------------------------------
  * Ground Bus: All component grounds (Arduino GND, Driver GND, Battery (-), 
@@ -40,8 +40,8 @@ const uint8_t PIN_MOTOR_IN2   = 5;    // Left Motors Reverse
 const uint8_t PIN_MOTOR_IN3   = 6;    // Right Motors Forward
 const uint8_t PIN_MOTOR_IN4   = 7;    // Right Motors Reverse
 const uint8_t PIN_RELAY_PUMP  = 12;   // Water / Pesticide Pump Relay on Pin D12 (Pure Digital Pin)
-const uint8_t PIN_SERVO_SEED  = 9;    // Seed Dispenser MG90S Servo
-const uint8_t PIN_SERVO_PLOUGH= 10;   // Plough Lifter MG996R Servo
+const uint8_t PIN_SERVO_SEED  = 9;    // Seed Dispenser TowerPro SG90 Micro Servo
+const uint8_t PIN_SERVO_PLOUGH= 10;   // Plough Lifter TowerPro SG90 Micro Servo
 const uint8_t PIN_STATUS_LED  = 13;   // Onboard Status LED
 
 // Relay Logic Configuration: Active-LOW (LOW=ON, HIGH=OFF)
@@ -305,7 +305,7 @@ void updateLocomotionPWM() {
 }
 
 // ============================================================================
-// PLOUGH SUBSYSTEM (MG996R High-Torque Servo)
+// PLOUGH SUBSYSTEM (TowerPro SG90 Micro Servo)
 // ============================================================================
 void setPloughPosition(int angle) {
   if (!ploughServo.attached()) {

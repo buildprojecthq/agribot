@@ -17,12 +17,12 @@
     <string name="btn_stop">STOP</string>
     
     <string name="tool_plough_title">Soil Ploughing Unit</string>
-    <string name="tool_plough_desc">MG996R Servo (Pin D10)</string>
+    <string name="tool_plough_desc">TowerPro SG90 Servo (Pin D10)</string>
     
     <string name="tool_seed_title">Seed Sowing Dispenser</string>
-    <string name="tool_seed_desc">MG90S Agitation (Pin D9)</string>
+    <string name="tool_seed_desc">TowerPro SG90 Agitation (Pin D9)</string>
     
     <string name="tool_water_title">Water &amp; Pesticide Sprayer</string>
-    <string name="tool_water_desc">DC Pump Relay (Pin D8)</string>
+    <string name="tool_water_desc">DC Pump Relay (Pin D12)</string>
 </resources>
 
